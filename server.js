@@ -12,16 +12,15 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/public", express.static(`${process.cwd()}/public`));
+
 app.get("/", function (req, res) {
   res.sendFile(process.cwd() + "/views/index.html");
 });
-
 const urlSchema = {
   name: String,
   code: Number,
 };
 const ShortenedUrl = mongoose.model("ShortenedUrl", urlSchema);
-
 app.post("/api/shorturl/new", function (req, res) {
   url = req.body.url;
   ShortenedUrl.find({}, function (err, foundItems) {
@@ -37,13 +36,29 @@ app.post("/api/shorturl/new", function (req, res) {
         console.log("saved successfully first one code zero");
       });
     } else {
-      // ShortenedUrl.sort({ code: 'asc'});
-      console.log('there is already items in collection')
-
+      console.log("there is already items in collection");
+      ShortenedUrl.findOne({})
+        .sort({ code: "desc" })
+        .exec((error, res) => {
+          if (!err) {
+            let inc = res.code + 1;
+            console.log("adding new item with code =", inc);
+            const dbUrl = new ShortenedUrl({
+              name: url,
+              code: inc,
+            });
+            dbUrl.save(function (err, res) {
+              if (err) return console.log(err, "there was an error ln 53");
+              // saved!
+              console.log(`${res} saved success w code `);
+            });
+          } else {
+            console.log(err, "the err");
+          }
+        });
     }
   });
   res.json({ url });
-
 });
 
 app.listen(port, function () {
