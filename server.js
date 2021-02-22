@@ -5,7 +5,7 @@ const app = express();
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 mongoose.connect("mongodb://localhost:27017/urlsToShorten", {
-  useNewUrlParser: true,
+  useNewUrlParser: true, useUnifiedTopology: true
 });
 // Basic Configuration
 const port = process.env.PORT || 3000;
@@ -20,7 +20,22 @@ const urlSchema = {
   name: String,
   code: Number,
 };
+
 const ShortenedUrl = mongoose.model("ShortenedUrl", urlSchema);
+
+app.get("/api/shorturl/:code", function(req, res){
+  foundcode=req.params.code
+  ShortenedUrl.findOne({code:foundcode}).exec((err, result) => {
+    if(err) return res.send(err)
+    if(!err && result!=undefined){
+      console.log('redirectiong')
+      res.redirect('https://'+result.name)
+    } else {
+      res.json({error:'an error occurred'})
+    }
+  })
+})
+
 app.post("/api/shorturl/new", function (req, res) {
   url = req.body.url;
   ShortenedUrl.find({}, function (err, foundItems) {
