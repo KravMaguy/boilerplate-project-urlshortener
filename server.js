@@ -4,9 +4,20 @@ const cors = require("cors");
 const app = express();
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
-mongoose.connect("mongodb://localhost:27017/urlsToShorten", {
-  useNewUrlParser: true, useUnifiedTopology: true
+// mongoose.connect("mongodb://localhost:27017/urlsToShorten", {
+//   useNewUrlParser: true, useUnifiedTopology: true
+// });
+const connection=process.env.connection
+
+mongoose.connect(connection, {
+  useNewUrlParser: true,useUnifiedTopology: true
 });
+
+if(!connection){
+  throw new Error('Required connection missing');
+} else {
+  console.log(connection)
+}
 // Basic Configuration
 const port = process.env.PORT || 3000;
 app.use(cors());
@@ -29,7 +40,7 @@ app.get("/api/shorturl/:code", function(req, res){
     if(err) return res.send(err)
     if(!err && result!=undefined){
       console.log('redirectiong')
-      res.redirect('https://'+result.name)
+      res.redirect(result.name)
     } else {
       res.json({error:'an error occurred'})
     }
@@ -38,6 +49,11 @@ app.get("/api/shorturl/:code", function(req, res){
 
 app.post("/api/shorturl/new", function (req, res) {
   url = req.body.url;
+  const regex=/^(ftp|https?):\/\/+(www\.)?[a-z0-9\-\.]{3,}\.[a-z]{3}$/
+  if(!regex.test(url)){
+    return res.json({error:'Invalid URL'})
+  }
+
   ShortenedUrl.find({}, function (err, foundItems) {
     if (foundItems.length === 0) {
       console.log("founditems is zero");
