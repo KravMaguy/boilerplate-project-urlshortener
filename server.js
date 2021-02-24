@@ -49,21 +49,19 @@ app.get("/api/shorturl/:code", function(req, res){
 
 app.post("/api/shorturl/new", function (req, res) {
   url = req.body.url;
-  const regex=/^(ftp|https?):\/\/+(www\.)?[a-z0-9\-\.]{3,}\.[a-z]{3}$/
-  if(!regex.test(url)){
-    return res.json({error:'Invalid URL'})
-  }
-
+  var valid = /^(ftp|http|https):\/\/[^ "]+$/.test(url);
+  if(!valid) return res.json({error:'Invalid URL'})
+  let inc;
   ShortenedUrl.find({}, function (err, foundItems) {
     if (foundItems.length === 0) {
+      inc=0;
       console.log("founditems is zero");
       const dbUrl = new ShortenedUrl({
         name: url,
-        code: 0,
+        code: inc,
       });
       dbUrl.save(function (err) {
         if (err) return console.log(err, "there was an error saving it");
-        // saved!
         console.log("saved successfully first one code zero");
       });
     } else {
@@ -72,7 +70,7 @@ app.post("/api/shorturl/new", function (req, res) {
         .sort({ code: "desc" })
         .exec((error, res) => {
           if (!err) {
-            let inc = res.code + 1;
+            inc = res.code + 1;
             console.log("adding new item with code =", inc);
             const dbUrl = new ShortenedUrl({
               name: url,
@@ -89,7 +87,7 @@ app.post("/api/shorturl/new", function (req, res) {
         });
     }
   });
-  res.json({ url });
+  res.json({ original_url:url, short_url:inc });
 });
 
 app.listen(port, function () {
