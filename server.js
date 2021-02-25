@@ -62,32 +62,34 @@ app.post("/api/shorturl/new", function (req, res) {
       });
       dbUrl.save(function (err) {
         if (err) return console.log(err, "there was an error saving it");
-        console.log("saved successfully first one code zero");
+        console.log("first one code zero saved");
+        res.send({ original_url:url, short_url:inc });
       });
     } else {
       console.log("there is already items in collection");
       ShortenedUrl.findOne({})
         .sort({ code: "desc" })
-        .exec((error, res) => {
-          if (!err) {
-            inc = res.code + 1;
+        .exec((error, response) => {
+          if (!error) {
+            inc = response.code + 1;
             console.log("adding new item with code =", inc);
             const dbUrl = new ShortenedUrl({
               name: url,
               code: inc,
             });
-            dbUrl.save(function (err, res) {
+            dbUrl.save(function (err, savedObj) {
               if (err) return console.log(err, "there was an error ln 53");
               // saved!
-              console.log(`${res} saved success w code `);
+              console.log(`${savedObj} saved obj `);
+              res.send({ original_url:url, short_url:inc });
             });
           } else {
             console.log(err, "the err");
           }
-        });
+        })
     }
-  });
-  res.json({ original_url:url, short_url:inc });
+  })
+  // res.json({ original_url:url, short_url:inc });
 });
 
 app.listen(port, function () {
